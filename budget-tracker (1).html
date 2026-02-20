@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RupeeFlow — Smart Budget Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@400;500;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0d0f14;
+  --ink2: #161921;
+  --ink3: #1e2230;
+  --border: #272b38;
+  --border2: #333847;
+  --lime: #c6f135;
+  --lime-glow: rgba(198,241,53,0.18);
+  --lime-glow2: rgba(198,241,53,0.08);
+  --sky: #38bdf8;
+  --rose: #fb7185;
+  --amber: #fbbf24;
+  --txt: #e4e8f0;
+  --txt2: #8b92a8;
+  --txt3: #555e75;
+  --green-ok: #22c55e;
+  --green-glow: rgba(34,197,94,0.14);
+}
+
+html, body { height: 100%; overflow: hidden; background: var(--ink); color: var(--txt); font-family: 'Cabinet Grotesk', sans-serif; }
+
+/* PAGES */
+.page { position: fixed; inset: 0; display: none; flex-direction: column; overflow: hidden; }
+.page.active { display: flex; }
+
+/* GRAIN */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9000;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes riseIn { from { opacity:0; transform:translateY(22px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes spin   { to { transform:rotate(360deg); } }
+@keyframes blink  { 0%,100%{opacity:1} 50%{opacity:0.35} }
+@keyframes popIn  { 0%{transform:scale(0.4);opacity:0} 70%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
+
+/* ════════════════════════════════════════
+   PAGE 1 — LOGIN
+════════════════════════════════════════ */
+#pg-login {
+  align-items: center; justify-content: center;
+  background: radial-gradient(ellipse 80% 60% at 50% -5%, rgba(198,241,53,0.06) 0%, transparent 70%), var(--ink);
+}
+
+.login-wrap { width: 460px; animation: riseIn 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+
+.brand-block { text-align: center; margin-bottom: 44px; }
+.brand-row { display: inline-flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.brand-icon {
+  width: 46px; height: 46px; border-radius: 13px;
+  background: var(--lime); display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-family: 'Clash Display',sans-serif; font-weight: 700; color: var(--ink);
+  box-shadow: 0 0 30px rgba(198,241,53,0.35);
+}
+.brand-name { font-family: 'Clash Display',sans-serif; font-size: 30px; font-weight: 700; letter-spacing: -1px; color: #fff; }
+.brand-name em { color: var(--lime); font-style: normal; }
+.brand-sub { font-family: 'JetBrains Mono',monospace; font-size: 11px; color: var(--txt3); letter-spacing: 2.5px; text-transform: uppercase; }
+
+.card {
+  background: var(--ink2); border: 1px solid var(--border); border-radius: 24px;
+  padding: 44px 48px; position: relative; overflow: hidden;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.55);
+}
+.card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--lime) 50%, transparent);
+}
+
+.lbl { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--txt3); margin-bottom:8px; display:block; }
+
+.inp {
+  width: 100%; padding: 14px 18px;
+  background: var(--ink); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--txt);
+  font-family: 'Cabinet Grotesk',sans-serif; font-size: 15px;
+  outline: none; transition: border-color .2s, box-shadow .2s; margin-bottom: 20px;
+}
+.inp:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(198,241,53,0.1); }
+.inp::placeholder { color: var(--txt3); }
+
+.btn-lime {
+  width: 100%; padding: 16px;
+  background: var(--lime); color: var(--ink);
+  font-family: 'Clash Display',sans-serif; font-weight: 700; font-size: 16px;
+  border: none; border-radius: 12px; cursor: pointer; transition: all .2s; margin-top: 4px;
+}
+.btn-lime:hover { background: #d4f84a; transform: translateY(-1px); box-shadow: 0 12px 32px rgba(198,241,53,0.3); }
+.btn-lime:active { transform: translateY(0); }
+
+.login-note { text-align:center; margin-top:18px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--txt3); }
+
+/* ════════════════════════════════════════
+   PAGE 2 — HOME DASHBOARD
+════════════════════════════════════════ */
+#pg-home { background: var(--ink); }
+
+.topbar {
+  padding: 22px 48px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border); background: var(--ink2); flex-shrink: 0;
+}
+.topbar-logo { font-family:'Clash Display',sans-serif; font-size:22px; font-weight:700; letter-spacing:-.5px; color:#fff; }
+.topbar-logo em { color:var(--lime); font-style:normal; }
+.topbar-meta { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--txt3); text-align:right; }
+.topbar-greeting { font-size:13px; color:var(--txt2); margin-bottom:2px; }
+
+.home-body { flex:1; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:44px; padding:40px; overflow:auto; }
+
+.hero-text { text-align:center; }
+.hero-h1 { font-family:'Clash Display',sans-serif; font-size:54px; font-weight:700; letter-spacing:-2.5px; line-height:1.05; color:#fff; }
+.hero-h1 em { color:var(--lime); font-style:normal; display:block; }
+.hero-p { font-size:16px; color:var(--txt2); margin-top:6px; }
+
+.upload-ring { position:relative; width:196px; height:196px; cursor:pointer; flex-shrink:0; }
+.upload-ring::before {
+  content:''; position:absolute; inset:-8px; border-radius:50%;
+  background: conic-gradient(var(--lime) 0deg, transparent 270deg);
+  animation: spin 10s linear infinite; opacity:.25;
+}
+.upload-ring::after {
+  content:''; position:absolute; inset:-4px; border-radius:50%;
+  border: 1px dashed rgba(198,241,53,.2);
+  animation: spin 25s linear infinite reverse;
+}
+.upload-inner {
+  position:absolute; inset:0; border-radius:50%;
+  background: linear-gradient(145deg,#1e2230,#161921);
+  border: 2px solid rgba(198,241,53,.25);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+  transition: all .3s; box-shadow: 0 0 60px rgba(198,241,53,.06);
+}
+.upload-ring:hover .upload-inner { border-color:var(--lime); box-shadow:0 0 80px rgba(198,241,53,.2); transform:scale(1.04); }
+.upload-inner svg { width:34px; height:34px; color:var(--lime); }
+.upload-inner span { font-family:'Clash Display',sans-serif; font-size:12px; font-weight:600; color:var(--lime); letter-spacing:1.5px; text-transform:uppercase; }
+
+#receipt-input { display:none; }
+
+.stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; width:100%; max-width:720px; }
+.stat-tile { background:var(--ink2); border:1px solid var(--border); border-radius:18px; padding:22px 26px; position:relative; overflow:hidden; }
+.stat-tile::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.st-a::before { background:var(--lime); }
+.st-b::before { background:var(--sky); }
+.st-c::before { background:var(--rose); }
+.stat-lbl { font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--txt3); margin-bottom:10px; }
+.stat-val { font-family:'Clash Display',sans-serif; font-size:26px; font-weight:700; }
+.st-a .stat-val { color:var(--lime); }
+.st-b .stat-val { color:var(--sky); }
+.st-c .stat-val { color:var(--rose); }
+
+/* BOTTOM NAV */
+.bottom-nav { display:flex; border-top:1px solid var(--border); background:var(--ink2); flex-shrink:0; }
+.nav-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:5px;
+  padding:14px 12px; cursor:pointer; border:none; background:none;
+  color:var(--txt3); font-family:'JetBrains Mono',monospace; font-size:9px;
+  letter-spacing:1.5px; text-transform:uppercase; transition:color .2s; position:relative;
+}
+.nav-btn::before {
+  content:''; position:absolute; top:0; left:30%; right:30%; height:2px;
+  background:var(--lime); border-radius:0 0 4px 4px; transform:scaleX(0); transition:transform .2s;
+}
+.nav-btn.active { color:var(--lime); }
+.nav-btn.active::before { transform:scaleX(1); }
+.nav-btn:hover:not(.active) { color:var(--txt2); }
+.nav-btn svg { width:20px; height:20px; }
+
+/* ════════════════════════════════════════
+   PAGE 3 — ALLOCATION
+════════════════════════════════════════ */
+#pg-alloc {
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(198,241,53,0.035) 0%, transparent 65%), var(--ink);
+  align-items:center; justify-content:center;
+}
+
+.alloc-wrap { width:100%; max-width:860px; padding:48px 40px; display:flex; flex-direction:column; align-items:center; gap:36px; }
+
+.alloc-head { text-align:center; }
+.alloc-badge {
+  display:inline-block; background:rgba(198,241,53,0.07); border:1px solid rgba(198,241,53,0.22);
+  color:var(--lime); font-family:'JetBrains Mono',monospace; font-size:10px;
+  letter-spacing:2.5px; text-transform:uppercase; padding:6px 18px; border-radius:100px; margin-bottom:18px;
+}
+.alloc-head h2 { font-family:'Clash Display',sans-serif; font-size:40px; font-weight:700; letter-spacing:-1.5px; color:#fff; margin-bottom:8px; }
+.alloc-head p { font-size:15px; color:var(--txt2); }
+
+.alloc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; width:100%; }
+
+.ac {
+  background:var(--ink2); border:2px solid var(--border); border-radius:24px;
+  padding:34px 22px 28px; cursor:pointer; text-align:center;
+  display:flex; flex-direction:column; align-items:center; gap:12px;
+  transition: all 0.28s cubic-bezier(0.22,1,0.36,1); position:relative; overflow:hidden;
+}
+.ac::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(circle at 50% 0%, rgba(198,241,53,0.05) 0%, transparent 70%);
+  opacity:0; transition:opacity .25s;
+}
+.ac:hover::before { opacity:1; }
+.ac:hover { border-color:rgba(198,241,53,0.22); transform:translateY(-4px); }
+.ac.sel {
+  border-color:var(--green-ok);
+  background:rgba(34,197,94,0.06);
+  transform:translateY(-6px);
+  box-shadow:0 0 0 4px rgba(34,197,94,0.1), 0 24px 56px rgba(34,197,94,0.12);
+}
+.ac.sel::before { opacity:0; }
+
+.ac-emoji { font-size:36px; line-height:1; }
+.ac-pct {
+  font-family:'Clash Display',sans-serif; font-size:54px; font-weight:700; letter-spacing:-3px;
+  color:var(--txt3); transition:color .25s; line-height:1;
+}
+.ac.sel .ac-pct { color:var(--green-ok); }
+.ac:hover:not(.sel) .ac-pct { color:var(--txt2); }
+.ac-name { font-family:'Clash Display',sans-serif; font-size:20px; font-weight:600; color:#fff; }
+.ac-desc { font-size:13px; color:var(--txt3); line-height:1.6; }
+.ac-ring {
+  width:30px; height:30px; border-radius:50%; background:var(--green-ok);
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; transform:scale(0.4);
+  transition:all .35s cubic-bezier(0.34,1.56,0.64,1);
+}
+.ac.sel .ac-ring { opacity:1; transform:scale(1); animation:popIn .4s cubic-bezier(0.34,1.56,0.64,1); }
+.ac-ring svg { width:15px; height:15px; color:#fff; }
+
+/* Success block */
+.success-block {
+  display:flex; flex-direction:column; align-items:center; gap:18px;
+  opacity:0; transform:translateY(14px);
+  transition:all 0.5s cubic-bezier(0.22,1,0.36,1);
+  pointer-events:none;
+  min-height:100px; /* prevent layout jump */
+}
+.success-block.show { opacity:1; transform:translateY(0); pointer-events:auto; }
+
+.success-pill {
+  display:flex; align-items:center; gap:12px;
+  background:rgba(34,197,94,0.1); border:1.5px solid rgba(34,197,94,0.32);
+  border-radius:14px; padding:16px 32px;
+}
+.s-dot { width:10px; height:10px; border-radius:50%; background:var(--green-ok); box-shadow:0 0 12px rgba(34,197,94,0.6); animation:blink 1.6s ease-in-out infinite; }
+.s-txt { font-family:'Clash Display',sans-serif; font-size:18px; font-weight:700; color:var(--green-ok); }
+
+.btn-home {
+  display:flex; align-items:center; gap:8px; padding:14px 32px;
+  background:transparent; border:1.5px solid var(--border2); border-radius:12px; color:var(--txt2);
+  font-family:'Clash Display',sans-serif; font-size:15px; font-weight:600; cursor:pointer; transition:all .2s;
+}
+.btn-home:hover { border-color:var(--lime); color:var(--lime); }
+.btn-home svg { width:18px; height:18px; }
+
+/* ════════════════════════════════════════
+   PAGE 4 — LEVELS
+════════════════════════════════════════ */
+#pg-levels { background:var(--ink); }
+
+.pg-header {
+  padding:26px 48px 22px; border-bottom:1px solid var(--border); background:var(--ink2); flex-shrink:0;
+  display:flex; align-items:flex-end; justify-content:space-between;
+}
+.pg-header h2 { font-family:'Clash Display',sans-serif; font-size:28px; font-weight:700; letter-spacing:-.8px; }
+.pg-header p { font-size:14px; color:var(--txt2); margin-top:4px; }
+.act-badge {
+  background:rgba(198,241,53,0.07); border:1px solid rgba(198,241,53,0.22);
+  color:var(--lime); font-family:'JetBrains Mono',monospace; font-size:11px;
+  padding:6px 16px; border-radius:100px; letter-spacing:1px; white-space:nowrap;
+}
+
+.levels-scroll { flex:1; overflow-y:auto; padding:36px 48px; }
+.levels-scroll::-webkit-scrollbar { width:5px; }
+.levels-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+.levels-path { display:flex; flex-direction:column; align-items:center; max-width:520px; margin:0 auto; }
+
+.lvl-row { display:flex; width:100%; margin-bottom:14px; position:relative; }
+.lvl-row:nth-child(odd)  { justify-content:flex-start; }
+.lvl-row:nth-child(even) { justify-content:flex-end; }
+
+.lvl-join {
+  position:absolute; bottom:-14px; left:50%; transform:translateX(-50%);
+  width:2px; height:14px; background:linear-gradient(to bottom,var(--border2),transparent);
+}
+
+.lvl-card {
+  width:265px; background:var(--ink2); border:1.5px solid var(--border); border-radius:20px;
+  padding:18px 20px; display:flex; align-items:center; gap:14px; transition:all .2s;
+  animation:riseIn .5s cubic-bezier(0.22,1,0.36,1) both;
+}
+.lvl-card:hover { transform:scale(1.02); }
+.lvl-card.unlocked { border-color:rgba(198,241,53,0.28); background:rgba(198,241,53,0.025); }
+.lvl-card.current  { border-color:var(--lime); box-shadow:0 0 0 3px rgba(198,241,53,0.12); }
+.lvl-card.missed   { border-color:rgba(251,113,133,0.28); background:rgba(251,113,133,0.025); }
+.lvl-card.locked   { opacity:.5; }
+
+.lvl-icon { width:48px; height:48px; border-radius:13px; background:var(--ink3); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; position:relative; }
+.lock-pip { position:absolute; bottom:-3px; right:-3px; background:var(--ink); border-radius:50%; width:17px; height:17px; display:flex; align-items:center; justify-content:center; font-size:9px; }
+
+.lvl-info { flex:1; min-width:0; }
+.lvl-num { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--txt3); letter-spacing:2px; text-transform:uppercase; margin-bottom:2px; }
+.lvl-name { font-family:'Clash Display',sans-serif; font-size:15px; font-weight:600; }
+.lvl-status { font-size:12px; color:var(--txt3); margin-top:2px; }
+.lvl-status.ok  { color:var(--lime); }
+.lvl-status.now { color:var(--amber); }
+.lvl-status.miss{ color:var(--rose); }
+
+.btn-revert {
+  margin-top:7px; display:inline-flex; align-items:center; gap:5px;
+  padding:5px 12px; background:rgba(251,113,133,0.1); border:1px solid rgba(251,113,133,0.28);
+  border-radius:20px; color:var(--rose); font-family:'JetBrains Mono',monospace; font-size:9px;
+  cursor:pointer; transition:all .2s; letter-spacing:1px; text-transform:uppercase;
+}
+.btn-revert:hover { background:rgba(251,113,133,0.18); }
+
+.pg-footer { padding:18px 48px; border-top:1px solid var(--border); display:flex; justify-content:center; flex-shrink:0; background:var(--ink2); }
+
+/* ════════════════════════════════════════
+   PAGE 5 — HISTORY
+════════════════════════════════════════ */
+#pg-history { background:var(--ink); }
+
+.hist-scroll { flex:1; overflow-y:auto; padding:24px 48px; }
+.hist-scroll::-webkit-scrollbar { width:5px; }
+.hist-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+.hist-list { display:flex; flex-direction:column; gap:10px; max-width:840px; margin:0 auto; }
+
+.hbar {
+  background:var(--ink2); border:1px solid var(--border); border-radius:16px;
+  padding:14px 20px; display:flex; align-items:center; gap:16px;
+  cursor:pointer; transition:all .2s; position:relative; overflow:hidden;
+  animation:riseIn .4s cubic-bezier(0.22,1,0.36,1) both;
+}
+.hbar::after { content:''; position:absolute; left:0; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; }
+.hbar.needs::after   { background:var(--sky); }
+.hbar.wants::after   { background:var(--rose); }
+.hbar.savings::after { background:var(--lime); }
+.hbar:hover { border-color:var(--border2); transform:translateX(4px); background:var(--ink3); }
+
+.hbar-date { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--txt3); min-width:66px; }
+.hbar-thumb {
+  width:46px; height:46px; border-radius:12px; background:var(--ink3);
+  border:1px solid var(--border); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:19px; overflow:hidden;
+}
+.hbar-thumb img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+.hbar-info { flex:1; }
+.hbar-merch { font-family:'Clash Display',sans-serif; font-size:15px; font-weight:600; margin-bottom:2px; }
+.hbar-cat { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--txt3); letter-spacing:1px; text-transform:uppercase; }
+.hbar-amt { font-family:'Clash Display',sans-serif; font-size:19px; font-weight:700; }
+.hbar.needs .hbar-amt   { color:var(--sky); }
+.hbar.wants .hbar-amt   { color:var(--rose); }
+.hbar.savings .hbar-amt { color:var(--lime); }
+.hbar-arr { color:var(--txt3); flex-shrink:0; }
+.hbar-arr svg { width:15px; height:15px; }
+
+/* ════════════════════════════════════════
+   PAGE 6 — PROFILE
+════════════════════════════════════════ */
+#pg-profile { background:var(--ink); }
+
+.prof-scroll { flex:1; overflow-y:auto; padding:28px 48px; }
+.prof-scroll::-webkit-scrollbar { width:5px; }
+.prof-scroll::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+.prof-inner { max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:20px; }
+
+.pcard { background:var(--ink2); border:1px solid var(--border); border-radius:22px; padding:30px; }
+
+.p-avatar-row { display:flex; align-items:center; gap:22px; margin-bottom:26px; }
+.p-avatar {
+  width:74px; height:74px; border-radius:50%;
+  background:linear-gradient(135deg,var(--sky),var(--lime));
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Clash Display',sans-serif; font-size:28px; font-weight:700; color:var(--ink);
+  flex-shrink:0; box-shadow:0 8px 28px rgba(56,189,248,0.22);
+}
+.p-name { font-family:'Clash Display',sans-serif; font-size:22px; font-weight:700; margin-bottom:4px; }
+.p-email { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--txt3); }
+.p-badge {
+  display:inline-flex; align-items:center; gap:5px; margin-top:7px;
+  background:rgba(198,241,53,0.07); border:1px solid rgba(198,241,53,0.2);
+  color:var(--lime); font-family:'JetBrains Mono',monospace; font-size:10px;
+  padding:4px 12px; border-radius:100px; letter-spacing:1.5px; text-transform:uppercase;
+}
+
+.p-grid { display:grid; grid-template-columns:1fr 1fr; gap:13px; }
+.p-field { background:var(--ink3); border-radius:13px; padding:15px 18px; }
+.p-lbl { font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--txt3); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:5px; }
+.p-val { font-family:'Clash Display',sans-serif; font-size:18px; font-weight:600; }
+.p-val.hi { color:var(--lime); }
+.p-val.sky { color:var(--sky); }
+
+.sec-title { font-family:'Clash Display',sans-serif; font-size:17px; font-weight:700; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.sec-title svg { width:19px; height:19px; color:var(--lime); }
+
+.pw-form { display:flex; flex-direction:column; gap:15px; }
+.pw-field { display:flex; flex-direction:column; gap:7px; }
+
+.pw-bars { display:flex; gap:4px; margin-top:4px; }
+.pw-bar { flex:1; height:3px; border-radius:2px; background:var(--border); transition:background .3s; }
+
+.btn-sky {
+  padding:14px; background:var(--sky); color:var(--ink);
+  font-family:'Clash Display',sans-serif; font-weight:700; font-size:15px;
+  border:none; border-radius:12px; cursor:pointer; transition:all .2s; margin-top:4px;
+}
+.btn-sky:hover { background:#5fd0fb; transform:translateY(-1px); box-shadow:0 10px 28px rgba(56,189,248,0.3); }
+
+/* ════════════════════════════════════════
+   BILL MODAL
+════════════════════════════════════════ */
+.modal-bg {
+  position:fixed; inset:0; background:rgba(0,0,0,0.88);
+  display:none; align-items:center; justify-content:center; z-index:8000;
+  backdrop-filter:blur(12px);
+}
+.modal-bg.open { display:flex; animation:fadeIn .2s ease; }
+.modal-box {
+  background:var(--ink2); border:1px solid var(--border2); border-radius:24px;
+  width:400px; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.7);
+  animation:riseIn .35s cubic-bezier(0.22,1,0.36,1);
+}
+.modal-top { padding:22px 26px 18px; border-bottom:1px solid var(--border); }
+.modal-merch { font-family:'Clash Display',sans-serif; font-size:19px; font-weight:700; }
+.modal-sub { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--txt3); margin-top:3px; }
+.modal-img { width:100%; min-height:270px; background:var(--ink3); display:flex; align-items:center; justify-content:center; font-size:68px; }
+.modal-img img { width:100%; display:block; }
+.modal-foot { padding:14px 26px; display:flex; justify-content:flex-end; }
+.btn-close-modal {
+  padding:10px 22px; background:var(--ink3); border:1px solid var(--border); border-radius:10px; color:var(--txt2);
+  font-family:'Clash Display',sans-serif; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s;
+}
+.btn-close-modal:hover { background:var(--border); color:var(--txt); }
+
+/* TOAST */
+#toast {
+  position:fixed; bottom:26px; left:50%;
+  transform:translateX(-50%) translateY(14px);
+  background:var(--ink2); border:1px solid var(--border2); border-radius:14px; padding:12px 22px;
+  font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--txt);
+  display:flex; align-items:center; gap:10px;
+  opacity:0; pointer-events:none;
+  transition:all .3s cubic-bezier(0.22,1,0.36,1); z-index:9990;
+  box-shadow:0 16px 48px rgba(0,0,0,0.5); white-space:nowrap;
+}
+#toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+#toast .tdot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+#toast.ok .tdot { background:var(--green-ok); box-shadow:0 0 8px rgba(34,197,94,0.6); }
+#toast.err .tdot { background:var(--rose); }
+</style>
+</head>
+<body>
+
+<!-- ════ PG 1: LOGIN ════ -->
+<div class="page active" id="pg-login">
+  <div class="login-wrap">
+    <div class="brand-block">
+      <div class="brand-row">
+        <div class="brand-icon">₹</div>
+        <div class="brand-name">Rupee<em>Flow</em></div>
+      </div>
+      <div class="brand-sub">Smart Budget Intelligence</div>
+    </div>
+    <div class="card">
+      <label class="lbl" for="u-user">Username</label>
+      <input class="inp" id="u-user" type="text" placeholder="Enter your username" autocomplete="off">
+      <label class="lbl" for="u-pass">Password</label>
+      <input class="inp" id="u-pass" type="password" placeholder="••••••••••">
+      <button class="btn-lime" onclick="doLogin()">Sign In &nbsp;→</button>
+    </div>
+    <div class="login-note">Demo: enter any credentials to continue</div>
+  </div>
+</div>
+
+<!-- ════ PG 2: HOME ════ -->
+<div class="page" id="pg-home">
+  <header class="topbar">
+    <div>
+      <div class="topbar-logo">Rupee<em>Flow</em></div>
+      <div class="topbar-greeting" id="h-greeting"></div>
+    </div>
+    <div class="topbar-meta" id="h-date"></div>
+  </header>
+
+  <div class="home-body">
+    <div class="hero-text">
+      <div class="hero-h1">Track Every<em>Rupee.</em></div>
+      <div class="hero-p">Upload a receipt to classify your spending instantly</div>
+    </div>
+
+    <div class="upload-ring" onclick="document.getElementById('receipt-input').click()" title="Upload Receipt">
+      <div class="upload-inner">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+        </svg>
+        <span>Upload Receipt</span>
+      </div>
+    </div>
+    <input type="file" id="receipt-input" accept="image/*" onchange="handleFile(event)">
+
+    <div class="stats-row">
+      <div class="stat-tile st-a">
+        <div class="stat-lbl">Total Tracked</div>
+        <div class="stat-val">₹2,34,500</div>
+      </div>
+      <div class="stat-tile st-b">
+        <div class="stat-lbl">Needs (50%)</div>
+        <div class="stat-val">₹1,17,250</div>
+      </div>
+      <div class="stat-tile st-c">
+        <div class="stat-lbl">Savings (20%)</div>
+        <div class="stat-val">₹46,900</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="goHome()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" id="nav-profile" onclick="goTo('pg-profile','nav-profile')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+      Profile
+    </button>
+    <button class="nav-btn" id="nav-levels" onclick="goTo('pg-levels','nav-levels')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+      Levels
+    </button>
+    <button class="nav-btn" id="nav-history" onclick="goTo('pg-history','nav-history')">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      History
+    </button>
+  </nav>
+</div>
+
+<!-- ════ PG 3: ALLOCATION ════ -->
+<div class="page" id="pg-alloc">
+  <div class="alloc-wrap">
+    <div class="alloc-head">
+      <div class="alloc-badge">50 · 30 · 20 Rule</div>
+      <h2>Classify This Bill</h2>
+      <p>Select one category to allocate your expense</p>
+    </div>
+
+    <div class="alloc-grid">
+      <div class="ac" id="ac-needs" onclick="pickAlloc('needs')">
+        <div class="ac-emoji">🏠</div>
+        <div class="ac-pct">50%</div>
+        <div class="ac-name">Needs</div>
+        <div class="ac-desc">Rent, groceries, utilities &amp; daily essentials</div>
+        <div class="ac-ring">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+      </div>
+      <div class="ac" id="ac-wants" onclick="pickAlloc('wants')">
+        <div class="ac-emoji">🎯</div>
+        <div class="ac-pct">30%</div>
+        <div class="ac-name">Wants</div>
+        <div class="ac-desc">Dining, travel, shopping &amp; entertainment</div>
+        <div class="ac-ring">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+      </div>
+      <div class="ac" id="ac-savings" onclick="pickAlloc('savings')">
+        <div class="ac-emoji">💰</div>
+        <div class="ac-pct">20%</div>
+        <div class="ac-name">Savings</div>
+        <div class="ac-desc">Investments, SIP, emergency fund &amp; goals</div>
+        <div class="ac-ring">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden until selection; fades in after save -->
+    <div class="success-block" id="success-block">
+      <div class="success-pill">
+        <div class="s-dot"></div>
+        <div class="s-txt">Saved Successfully!</div>
+      </div>
+      <button class="btn-home" onclick="goHome()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+        Back to Home
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PG 4: LEVELS ════ -->
+<div class="page" id="pg-levels">
+  <div class="pg-header">
+    <div>
+      <h2>🗺️ Progress Map</h2>
+      <p>Complete goals each month to level up your finances</p>
+    </div>
+    <div class="act-badge">⭐ Saving Samurai · Lvl 3</div>
+  </div>
+
+  <div class="levels-scroll">
+    <div class="levels-path">
+
+      <div class="lvl-row" style="animation-delay:.00s">
+        <div class="lvl-card locked" style="animation-delay:.00s">
+          <div class="lvl-icon">👑<div class="lock-pip">🔒</div></div>
+          <div class="lvl-info">
+            <div class="lvl-num">Level 06</div>
+            <div class="lvl-name">Rupee Emperor</div>
+            <div class="lvl-status">Locked — keep climbing</div>
+          </div>
+        </div>
+        <div class="lvl-join"></div>
+      </div>
+
+      <div class="lvl-row" style="animation-delay:.05s">
+        <div class="lvl-card locked" style="animation-delay:.05s">
+          <div class="lvl-icon">🏦<div class="lock-pip">🔒</div></div>
+          <div class="lvl-info">
+            <div class="lvl-num">Level 05</div>
+            <div class="lvl-name">Wealth Builder</div>
+            <div class="lvl-status">Locked</div>
+          </div>
+        </div>
+        <div class="lvl-join"></div>
+      </div>
+
+      <div class="lvl-row" style="animation-delay:.10s">
+        <div class="lvl-card locked" style="animation-delay:.10s">
+          <div class="lvl-icon">📈<div class="lock-pip">🔒</div></div>
+          <div class="lvl-info">
+            <div class="lvl-num">Level 04</div>
+            <div class="lvl-name">Finance Pro</div>
+            <div class="lvl-status">Locked</div>
+          </div>
+        </div>
+        <div class="lvl-join"></div>
+      </div>
+
+      <div class="lvl-row" style="animation-delay:.15s">
+        <div class="lvl-card current" style="animation-delay:.15s">
+          <div class="lvl-icon" style="background:rgba(198,241,53,.08)">💎<div class="lock-pip">▶</div></div>
+          <div class="lvl-info">
+            <div class="lvl-num">Level 03</div>
+            <div class="lvl-name">Saving Samurai</div>
+            <div class="lvl-status now">▶ Current Level</div>
+          </div>
+        </div>
+        <div class="lvl-join"></div>
+      </div>
+
+      <div class="lvl-row" style="animation-delay:.20s">
+        <div class="lvl-card missed" style="animation-delay:.20s">
+          <div class="lvl-icon">📊<div class="lock-pip">⚠️</div></div>
+          <div class="lvl-info">
+            <div class="lvl-num">Level 02</div>
+            <div class="lvl-name">Rupee Ranger</div>
+            <div class="lvl-status miss">Goal Missed</div>
+            <button class="btn-revert" onclick="revertLevel(2)">↩ Return to Level</button>
+          </div>
+        </div>
+        <div class="lvl-join"></div>
+      </div>
+
+      <div class="lvl-row" style="animation-delay:.25s">
+        <div class="lvl-card unlocked" style="animation-delay:.25s">
+          <div class="lvl-icon" style="background:rgba(198,241,53,.05)">🌱<div class="lock-pip">✅</div></div>
+          <div class="lvl-info">
+            <div class="lvl-num">Level 01</div>
+            <div class="lvl-name">Starter</div>
+            <div class="lvl-status ok">Completed ✓</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <button class="btn-home" onclick="goHome()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+      Back to Home
+    </button>
+  </div>
+</div>
+
+<!-- ════ PG 5: HISTORY ════ -->
+<div class="page" id="pg-history">
+  <div class="pg-header">
+    <div>
+      <h2>📋 Transaction History</h2>
+      <p>Tap any entry to view the uploaded bill photo</p>
+    </div>
+  </div>
+
+  <div class="hist-scroll">
+    <div class="hist-list" id="hist-list"></div>
+  </div>
+
+  <div class="pg-footer">
+    <button class="btn-home" onclick="goHome()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+      Back to Home
+    </button>
+  </div>
+</div>
+
+<!-- ════ PG 6: PROFILE ════ -->
+<div class="page" id="pg-profile">
+  <div class="pg-header">
+    <div>
+      <h2>👤 Profile &amp; Settings</h2>
+      <p>Manage your account and security preferences</p>
+    </div>
+  </div>
+
+  <div class="prof-scroll">
+    <div class="prof-inner">
+
+      <div class="pcard">
+        <div class="p-avatar-row">
+          <div class="p-avatar" id="p-avatar">A</div>
+          <div>
+            <div class="p-name" id="p-name">Arjun Mehta</div>
+            <div class="p-email">arjun.mehta@rupeeflow.in</div>
+            <div class="p-badge">⭐ Saving Samurai · Level 3</div>
+          </div>
+        </div>
+        <div class="p-grid">
+          <div class="p-field"><div class="p-lbl">Member Since</div><div class="p-val">Jan 2025</div></div>
+          <div class="p-field"><div class="p-lbl">Total Tracked</div><div class="p-val hi">₹2,34,500</div></div>
+          <div class="p-field"><div class="p-lbl">Bills Uploaded</div><div class="p-val sky">47</div></div>
+          <div class="p-field"><div class="p-lbl">Savings Rate</div><div class="p-val hi">22.4%</div></div>
+        </div>
+      </div>
+
+      <div class="pcard">
+        <div class="sec-title">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+          Change Password
+        </div>
+        <div class="pw-form">
+          <div class="pw-field">
+            <label class="lbl">Current Password</label>
+            <input class="inp" type="password" placeholder="Enter current password" style="margin-bottom:0">
+          </div>
+          <div class="pw-field">
+            <label class="lbl">New Password</label>
+            <input class="inp" type="password" id="new-pw" placeholder="Minimum 8 characters" style="margin-bottom:0" oninput="checkPw()">
+            <div class="pw-bars">
+              <div class="pw-bar" id="pwb1"></div>
+              <div class="pw-bar" id="pwb2"></div>
+              <div class="pw-bar" id="pwb3"></div>
+              <div class="pw-bar" id="pwb4"></div>
+            </div>
+          </div>
+          <div class="pw-field">
+            <label class="lbl">Confirm New Password</label>
+            <input class="inp" type="password" placeholder="Re-enter new password" style="margin-bottom:0">
+          </div>
+          <button class="btn-sky" onclick="updatePw()">Update Password</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="pg-footer">
+    <button class="btn-home" onclick="goHome()">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+      Back to Home
+    </button>
+  </div>
+</div>
+
+<!-- BILL MODAL -->
+<div class="modal-bg" id="bill-modal">
+  <div class="modal-box">
+    <div class="modal-top">
+      <div class="modal-merch" id="m-merch">Merchant</div>
+      <div class="modal-sub" id="m-sub">—</div>
+    </div>
+    <div class="modal-img" id="m-img">🧾</div>
+    <div class="modal-foot">
+      <button class="btn-close-modal" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"><div class="tdot"></div><span id="toast-txt"></span></div>
+
+<script>
+/* ── STATE ── */
+let loggedUser = 'Arjun';
+let pendingFile = null;
+
+const HISTORY = [
+  { id:1, date:'21 Feb', merchant:'D-Mart Supermarket',  amount:'₹3,240', cat:'needs',   emoji:'🏪', url:null },
+  { id:2, date:'19 Feb', merchant:'Swiggy Order',         amount:'₹480',   cat:'wants',   emoji:'🍕', url:null },
+  { id:3, date:'17 Feb', merchant:'HDFC SIP',              amount:'₹5,000', cat:'savings', emoji:'📊', url:null },
+  { id:4, date:'15 Feb', merchant:'Electricity Bill',      amount:'₹1,850', cat:'needs',   emoji:'⚡', url:null },
+  { id:5, date:'12 Feb', merchant:'BookMyShow',            amount:'₹720',   cat:'wants',   emoji:'🎬', url:null },
+  { id:6, date:'10 Feb', merchant:'Zepto Groceries',       amount:'₹1,100', cat:'needs',   emoji:'🥦', url:null },
+  { id:7, date:'07 Feb', merchant:'Netflix Subscription',  amount:'₹299',   cat:'wants',   emoji:'📺', url:null },
+  { id:8, date:'03 Feb', merchant:'LIC Premium',           amount:'₹8,500', cat:'savings', emoji:'🛡️', url:null },
+];
+
+/* ── ROUTING ── */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goTo(pageId, navId) {
+  showPage(pageId);
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(navId)?.classList.add('active');
+  if (pageId === 'pg-history') renderHistory();
+}
+
+function goHome() {
+  showPage('pg-home');
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('nav-home').classList.add('active');
+}
+
+/* ── LOGIN ── */
+function doLogin() {
+  const u = document.getElementById('u-user').value.trim();
+  const p = document.getElementById('u-pass').value.trim();
+  if (!u || !p) { toast('Please fill in both fields', false); return; }
+  loggedUser = u;
+  document.getElementById('p-name').textContent = u + ' Mehta';
+  document.getElementById('p-avatar').textContent = u[0].toUpperCase();
+  setMeta();
+  showPage('pg-home');
+  toast('Welcome back, ' + u + '!', true);
+}
+
+function setMeta() {
+  const h = new Date().getHours();
+  const g = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  document.getElementById('h-greeting').textContent = g + ', ' + loggedUser;
+  document.getElementById('h-date').textContent = new Date().toLocaleDateString('en-IN', { weekday:'short', day:'numeric', month:'long', year:'numeric' });
+}
+
+/* ── FILE UPLOAD ── */
+function handleFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  pendingFile = { name: file.name.replace(/\.[^.]+$/, ''), url: URL.createObjectURL(file) };
+  // Reset allocation state
+  ['needs','wants','savings'].forEach(c => document.getElementById('ac-' + c).classList.remove('sel'));
+  document.getElementById('success-block').classList.remove('show');
+  showPage('pg-alloc');
+  e.target.value = '';
+}
+
+/* ── ALLOCATION ──
+   Key UX rule:
+   1. Clicking a card → deselects others, selects this one (turns green)
+   2. After 300ms → "Saved Successfully!" fades in
+   3. After 600ms → "Back to Home" button fades in below it
+   Both elements are in .success-block which uses CSS opacity transition.
+   They are always rendered in the DOM (for smooth animation), just invisible.
+*/
+function pickAlloc(cat) {
+  // Toggle if same card clicked again — still just keep it selected
+  ['needs','wants','savings'].forEach(c => document.getElementById('ac-' + c).classList.remove('sel'));
+  document.getElementById('ac-' + cat).classList.add('sel');
+
+  // Save entry to history
+  const amts  = { needs:'₹1,200', wants:'₹650',  savings:'₹2,000' };
+  const emojis = { needs:'🧾',    wants:'🛍️',    savings:'💰' };
+  const now = new Date();
+  const ds = now.getDate() + ' ' + now.toLocaleString('en-IN', { month:'short' });
+  HISTORY.unshift({
+    id: Date.now(),
+    date: ds,
+    merchant: pendingFile?.name || 'New Receipt',
+    amount: amts[cat],
+    cat,
+    emoji: emojis[cat],
+    url: pendingFile?.url || null,
+  });
+
+  // Show success block (smooth fade-in via CSS transition after tiny delay)
+  // Hide first in case of re-selection
+  const sb = document.getElementById('success-block');
+  sb.classList.remove('show');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      setTimeout(() => sb.classList.add('show'), 280);
+    });
+  });
+}
+
+/* ── HISTORY RENDER ── */
+function renderHistory() {
+  const list = document.getElementById('hist-list');
+  list.innerHTML = '';
+  HISTORY.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'hbar ' + item.cat;
+    div.style.animationDelay = (i * 0.04) + 's';
+    div.onclick = () => openBill(item);
+    div.innerHTML = `
+      <div class="hbar-date">${item.date}</div>
+      <div class="hbar-thumb">${item.url ? `<img src="${item.url}" alt="bill">` : item.emoji}</div>
+      <div class="hbar-info">
+        <div class="hbar-merch">${item.merchant}</div>
+        <div class="hbar-cat">${item.cat} &nbsp;·&nbsp; Tap to view bill</div>
+      </div>
+      <div class="hbar-amt">${item.amount}</div>
+      <div class="hbar-arr"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/></svg></div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+/* ── BILL MODAL ── */
+function openBill(item) {
+  document.getElementById('m-merch').textContent = item.merchant;
+  document.getElementById('m-sub').textContent = item.date + '  ·  ' + item.cat.charAt(0).toUpperCase() + item.cat.slice(1) + '  ·  ' + item.amount;
+  const imgEl = document.getElementById('m-img');
+  imgEl.innerHTML = item.url
+    ? `<img src="${item.url}" alt="Receipt">`
+    : `<div style="display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--txt3);font-family:'JetBrains Mono',monospace;font-size:12px;padding:28px;text-align:center"><div style="font-size:64px">${item.emoji}</div>Sample entry — no image attached</div>`;
+  document.getElementById('bill-modal').classList.add('open');
+}
+function closeModal() { document.getElementById('bill-modal').classList.remove('open'); }
+
+/* ── LEVELS ── */
+function revertLevel(n) {
+  const names = {1:'Starter', 2:'Rupee Ranger'};
+  toast('Returning to Level ' + n + ': ' + (names[n] || 'Level ' + n), true);
+}
+
+/* ── PROFILE / PASSWORD ── */
+function checkPw() {
+  const v = document.getElementById('new-pw').value;
+  let score = 0;
+  if (v.length >= 6) score++;
+  if (v.length >= 10) score++;
+  if (/[A-Z]/.test(v) && /[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
+  const cols = ['var(--rose)','var(--amber)','var(--sky)','var(--lime)'];
+  [1,2,3,4].forEach(i => {
+    document.getElementById('pwb'+i).style.background = i <= score ? cols[Math.min(score-1,3)] : 'var(--border)';
+  });
+}
+function updatePw() { toast('Password updated successfully!', true); }
+
+/* ── TOAST ── */
+let _tt;
+function toast(msg, ok) {
+  const el = document.getElementById('toast');
+  document.getElementById('toast-txt').textContent = msg;
+  el.className = 'on ' + (ok ? 'ok' : 'err');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('on'), 3400);
+}
+
+/* ── INIT ── */
+setMeta();
+document.getElementById('u-pass').addEventListener('keydown', e => { if (e.key==='Enter') doLogin(); });
+document.getElementById('bill-modal').addEventListener('click', e => { if (e.target.id==='bill-modal') closeModal(); });
+</script>
+</body>
+</html>
