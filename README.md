@@ -14,8 +14,14 @@
 
 ### Hosted Project Link
 https://lekshmy-sr.github.io/tink-her-hack-infinity/
-<img width="1470" height="956" alt="Screenshot 2026-02-21 at 11 34 17 AM" src="https://github.com/user-attachments/assets/4f39cd08-6d21-4a55-9943-c91baf253849" />
-<img width="1439" height="718" alt="Screenshot 2026-02-21 at 11 34 27 AM" src="https://github.com/user-attachments/assets/c8d479e4-8c10-4384-ad6d-a1029979a2ee" />
+
+
+
+![WhatsApp Image 2026-02-21 at 13 00 46](https://github.com/user-attachments/assets/d0b9e105-2332-4102-aa14-2b16463293df)
+![WhatsApp Image 2026-02-21 at 13 02 05](https://github.com/user-attachments/assets/06ea622e-3f96-4e56-bef6-add7d9d10a71)
+
+
+
 
 ### Project Description
 RupeeFlow is a gamified personal finance tracker that helps users manage their spending using the **50-30-20 budgeting rule** (50% Needs, 30% Wants, 20% Savings). It features receipt OCR scanning, a dynamic scoring & leveling system, and a sleek dark-themed dashboard to make budgeting engaging and fun.
