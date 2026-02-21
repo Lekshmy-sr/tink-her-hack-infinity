@@ -2051,7 +2051,7 @@
             amountVal: item.amount,
             cat: item.category,
             emoji: item.category === 'savings' ? '💰' : item.category === 'need' ? '🏠' : '🎯',
-            url: null
+            url: item.image_url || null
           }));
           updateStatsFromData(data);
           return true;
@@ -2131,6 +2131,7 @@
 
       const formData = new FormData();
       formData.append('file', file);
+      toast('Uploading & scanning receipt...', true);
 
       try {
         const res = await fetch(`${API_URL}/api/upload`, {
@@ -2141,8 +2142,15 @@
         const data = await res.json();
         if (res.ok) {
           pendingImageUrl = data.url;
-          // Clear pre-filled amount for manual entry on next page
-          document.getElementById('alloc-amount').value = '';
+
+          // Pre-fill amount from OCR if available
+          if (data.extracted_amount) {
+            document.getElementById('alloc-amount').value = data.extracted_amount;
+            toast('Receipt scanned! Amount: ₹' + data.extracted_amount, true);
+          } else {
+            document.getElementById('alloc-amount').value = '';
+            toast('Receipt uploaded! Please enter amount manually.', true);
+          }
 
           ['needs', 'wants', 'savings'].forEach(c => document.getElementById('ac-' + c).classList.remove('sel'));
           document.getElementById('success-block').classList.remove('show');
@@ -2221,7 +2229,7 @@
         div.onclick = () => openBill(item);
         div.innerHTML = `
           <div class="hbar-date">${item.date}</div>
-          <div class="hbar-thumb">${item.image_url ? `<img src="${API_URL}${item.image_url}" alt="bill">` : item.emoji || '📄'}</div>
+          <div class="hbar-thumb">${item.url ? `<img src="${item.url}" alt="bill">` : item.emoji || '📄'}</div>
           <div class="hbar-info">
             <div class="hbar-merch">${item.merchant}</div>
             <div class="hbar-cat">${item.cat} &nbsp;·&nbsp; Tap to view bill</div>

@@ -198,7 +198,30 @@ def upload_file():
         filename = f"{os.urandom(8).hex()}_{file.filename}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        return jsonify({'url': f'/uploads/{filename}'}), 200
+        
+        # Try OCR extraction
+        extracted_text = ''
+        extracted_amount = None
+        try:
+            from PIL import Image
+            import pytesseract
+            import re
+            img = Image.open(filepath)
+            extracted_text = pytesseract.image_to_string(img)
+            # Try to find amounts like ₹1234, Rs.1234, 1,234.00 etc.
+            amounts = re.findall(r'(?:₹|Rs\.?|INR)\s*([\d,]+\.?\d*)', extracted_text)
+            if not amounts:
+                amounts = re.findall(r'(?:total|amount|grand total|net)\s*:?\s*(?:₹|Rs\.?)?\s*([\d,]+\.?\d*)', extracted_text, re.IGNORECASE)
+            if amounts:
+                extracted_amount = float(amounts[-1].replace(',', ''))
+        except Exception as e:
+            print(f"OCR failed: {e}")
+        
+        return jsonify({
+            'url': f'/uploads/{filename}',
+            'ocr_text': extracted_text,
+            'extracted_amount': extracted_amount
+        }), 200
 
 @app.route('/uploads/<path:filename>')
 def serve_upload(filename):
