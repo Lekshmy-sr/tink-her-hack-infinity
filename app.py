@@ -10,15 +10,15 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'dev-secret-key' # Change this in production
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///rupeeflow.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_SAMESITE'] = 'None'
+app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 
 if not os.path.exists(app.config['UPLOAD_FOLDER']):
     os.makedirs(app.config['UPLOAD_FOLDER'])
 
-CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": "*"}}, origins=["http://127.0.0.1:5500", "http://localhost:5500", "http://127.0.0.1:5000", "http://localhost:5000", "http://0.0.0.0:5500", "http://0.0.0.0:5000"])
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
 db.init_app(app)
 
 with app.app_context():

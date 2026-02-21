@@ -1587,6 +1587,22 @@
       </div>
     </div>
 
+    <!-- Stats Row -->
+    <div class="stats-row" style="margin: 0 auto;">
+      <div class="stat-tile st-a">
+        <div class="stat-lbl">Wants</div>
+        <div class="stat-val" id="total-tracked-val">₹0</div>
+      </div>
+      <div class="stat-tile st-b">
+        <div class="stat-lbl">Needs</div>
+        <div class="stat-val" id="needs-val">₹0</div>
+      </div>
+      <div class="stat-tile st-c">
+        <div class="stat-lbl">Savings</div>
+        <div class="stat-val" id="savings-val">₹0</div>
+      </div>
+    </div>
+
     <nav class="bottom-nav">
       <button class="nav-btn active" id="nav-home" onclick="goHome()">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1943,10 +1959,9 @@
     <div class="tdot"></div><span id="toast-txt"></span>
   </div>
 
-  </script>
   <script>
     /* ── STATE & CONSTANTS ── */
-    const API_URL = 'https://tink-her-hack-infinity-1.onrender.com';
+    const API_URL = '';
     let loggedUser = '';
     let pendingFile = null;
     let quickAddAmount = null;
