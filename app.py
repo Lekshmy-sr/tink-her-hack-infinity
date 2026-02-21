@@ -2,8 +2,8 @@ from flask import Flask, request, jsonify, session, render_template
 from flask_cors import CORS
 from models import db, User, Bill
 from werkzeug.security import generate_password_hash, check_password_hash
+# web: gunicorn app:app
 import os
-import process
 from datetime import timedelta
 
 app = Flask(__name__)
